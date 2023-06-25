@@ -1,3 +1,4 @@
 import Home from "./Home";
 import Signup from "./Signup";
-export { Home , Signup};
+import TailorProfile from "./TailorProfile";
+export { Home , Signup,TailorProfile};
