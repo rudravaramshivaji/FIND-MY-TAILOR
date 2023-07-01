@@ -1,4 +1,4 @@
-import { Bar, Line } from "react-chartjs-2";
+import {  Line } from "react-chartjs-2";
 import {
   BarElement,
   CategoryScale,
@@ -21,7 +21,7 @@ export default function Graph() {
     datasets: [
       {
         label: "Your Graph",
-        data: [23, 40, 27, 80],
+        data: [80, 40, 27, 10],
         ...fillGradient,
       },
     ],
@@ -42,14 +42,14 @@ export default function Graph() {
   return (
     <>
       <div
-        className="mx-auto -my-12 px-6 md:px-14"
+        className="pr-3 -my-11 md:px-14 mx-auto max-w-[100vw]"
         style={{
-          width: "100%",
           height: "340px",
         }}
       >
-        <Line className=" md:mx-0" data={data} options={options} />
+        <Line className="" data={data} options={options} />
       </div>
     </>
   );
 }
+// mx-auto -my-12 px-6 md:px-14

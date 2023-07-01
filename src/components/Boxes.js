@@ -20,11 +20,11 @@ export default function Boxes() {
     },
   ];
   return (
-    <section className="grid grid-cols-2 py-24  gap-5 px-5 lg:flex lg:items-center lg:justify-center">
+    <section className="grid grid-cols-2 py-24 gap-5 px-5 lg:flex lg:items-center lg:justify-center">
       {Stats.map((_, index) => {
         return (
           <React.Fragment key={index}>
-            <div className="border-[2px] max-w-sm px-12 py-8 hover:shadow-md shadow-slate-200 duration-300 ease-in-out shadow-sm border-slate-100 cursor-pointer">
+            <div className="border-[1px] max-w-sm px-8 py-8 hover:shadow-md shadow-slate-200 duration-300 ease-in-out shadow-sm border-slate-100 cursor-pointer">
               <div className="text-center space-y-1.5">
                 <h1 className="md:text-lg font-semibold">{_.Tittle}</h1>
                 <p>{_.Count}</p>

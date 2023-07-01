@@ -1,40 +1,21 @@
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { RxCross2 } from "react-icons/rx";
-import {getDownloadURL, getStorage, ref, uploadBytes} from 'firebase/storage'
-import { db } from "../Firebase";
-import {collection, addDoc} from 'firebase/firestore';
-export default function AddProfile({ tooglemodel, settooglemodel }) {
-  
-
-  const storage = getStorage();
-
-  // getting user location ....
-
-  // postion 
-  // const [location, setLocation] = useState();
-  // const Address = async(position) => {
-  //   const {latitude, longitude} = position.coords;
-  //   try {
-
-  //     const userAddress = `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}`;
-  //     const response = await fetch(userAddress);
-  //     const data = await response.json();
-  //     const {suburb} = data.address;
-  //     // setLocation(suburb);
-  //     console.log(suburb);
-      
-  //   } catch (error) {
-  //     console.log(error);
-  //   } 
-
-  // }
-
-  // navigator.geolocation.getCurrentPosition(Address, (error) => {console.log(error)})
-  const [image, setImage] = useState(null);
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { db, storage } from "../Firebase";
+import { setDoc, doc, updateDoc } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
+import { FiUploadCloud } from "react-icons/fi";
+import "animate.css";
+export default function AddProfile({ settooglemodel }) {
+  const id = useId();
+  const inputref = useRef();
+  const navigate = useNavigate();
+  const Userjwt = localStorage.getItem("UserJwt");
+  const [blobimg, setblogimg] = useState({ image: null });
+  const [Path, setPath] = useState();
+  const [uploadimage, setuploadimage] = useState({ img: "" });
   const [profileCard, setprofileCard] = useState({
-    image: null,
-    imageURL: "",
-    Address: "Hyderabad",
+    Address: "",
     ShopName: "",
     AboutShop: "",
     Contact: "",
@@ -42,60 +23,74 @@ export default function AddProfile({ tooglemodel, settooglemodel }) {
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    setImage(file);
-    const imageUrl = URL.createObjectURL(file);
-    setprofileCard({
-      ...profileCard,
-      image: file,
-      imageURL: imageUrl,
-    });
+    setblogimg(URL.createObjectURL(file));
+    setuploadimage(file);
   };
 
-  
+  const SaveImageToCloud = async () => {
+    if (uploadimage) {
+      const Storeref = ref(storage, `${Userjwt}/${uploadimage.name}`);
+      const Upload = uploadBytesResumable(Storeref, uploadimage);
+      Upload.on(
+        "state_change",
+        (snap) => {
+          if (snap) return;
+        },
+        (err) => {
+          console.log(err);
+        },
+        () => {
+          getDownloadURL(Upload.snapshot.ref).then((path) => {
+            setPath(path);
+          });
+        }
+      );
+    }
+  };
 
-
-
+  const Getlocation = () => {
+    navigator.geolocation.getCurrentPosition((position) => {
+      const { latitude, longitude } = position.coords;
+      try {
+        const userAddress = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`;
+        fetch(userAddress)
+          .then((res) => res.json())
+          .then((response) => {
+            setprofileCard({
+              ...profileCard,
+              Address: response.address.county,
+            });
+          });
+      } catch (error) {
+        console.log(error);
+      }
+    });
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const docRef = await addDoc(collection(db, "PROFILELIVE"), profileCard);
-  
-      // Upload the image to Firebase Storage
-      if (image) {
-        const storageRef = ref(storage, `images/${image.name}`);
-        const snapshot = await uploadBytes(storageRef, image);
-        const downloadUrl = await getDownloadURL(snapshot.ref);
-  
-        // Update the profile card with the image URL
-        setprofileCard({
-          ...profileCard,
-          image: downloadUrl,
-        });
+      Getlocation();
+      if (Object.values(profileCard).every((i) => i !== "")) {
+        await SaveImageToCloud();
+        await setDoc(doc(db, "ProfileLive", id), profileCard);
       }
-  
-      // Reset the form fields
-      setprofileCard({
-        image: null,
-        imageURL: "",
-        Address: "",
-        ShopName: "",
-        AboutShop: "",
-        Contact: "",
-      });
-      settooglemodel(false);
     } catch (error) {
       console.log(error);
     }
   };
 
-  
-  
+  useEffect(() => {
+    if (Path) {
+      updateDoc(doc(db, `ProfileLive/${id}`), { Path: Path });
+      navigate("/");
+    }
+  }, [Path, id, navigate]);
 
   return (
     <>
-      <div className="fixed bg-black inset-0 bg-opacity-70 backdrop-blur-sm">
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="bg-white p-8 rounded-lg">
+      <div className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm animate__animated animate__fadeIn ">
+        <div className="absolute transform -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2">
+          <div className="bg-white  p-9 w-[90vw] sm:w-[50vw] md:w-[40vw] lg:w-[40vw] xl:w-[30vw] rounded-lg">
             <div className="flex justify-end mb-3.5 -mr-3">
               <RxCross2
                 onClick={() => {
@@ -107,36 +102,43 @@ export default function AddProfile({ tooglemodel, settooglemodel }) {
               />
             </div>
             <div>
-              <h1 className="text-yellow-500 text-lg font-semibold mb-6 text-center sm:text-lg md:text-xl">
+              <h1 className="mb-6 text-lg font-semibold text-center text-yellow-500 sm:text-lg md:text-xl">
                 Make Your Profile Live in Mins
               </h1>
             </div>
-            <form className="flex flex-col justify-center items-center space-y-8" onSubmit={handleSubmit}>
-              <div className="">
-                <input
-                  type="file"
-                  placeholder="Image"
-                  required
-                  value={profileCard.image}
-                  className="bg-slate-100 px-8 outline-none py-2.5"
-                  onChange={handleImageUpload}
-              //     onChange={async (e) => {
-              //       const file = e.target.files[0];
-              //      const imageUrl = URL.createObjectURL(file);
-
-              //        const storageRef = ref(storage, `images/${file.name}`);
-              //      const snapshot = await uploadBytes(storageRef, file);
-              //             const downloadUrl = await getDownloadURL(snapshot.ref);
-
-              //          setImage(file);
-              // //  setImageUrl(downloadUrl);
-              //        setprofileCard({
-              //          ...profileCard,
-              //         image: file,
-              //       imageUrl: downloadUrl,
-              //          });
-              //     }}
-                />
+            <form
+              className="flex flex-col items-center justify-center space-y-8"
+              onSubmit={handleSubmit}
+            >
+              <div>
+                <>
+                  <FiUploadCloud
+                    onClick={() => {
+                      inputref.current.click();
+                    }}
+                    size={45}
+                    color="grey"
+                    className={` ${blobimg.image !== null ? "hidden" : null} `}
+                  />
+                  <input
+                    type="file"
+                    placeholder="Image"
+                    required
+                    value={profileCard.Path}
+                    onChange={handleImageUpload}
+                    hidden
+                    ref={inputref}
+                  />
+                </>
+                {blobimg.image !== null ? (
+                  <img
+                    src={blobimg}
+                    className={` ${
+                      blobimg ? "block" : "hidden"
+                    }  max-w-[45vw] sm:max-w-[20vw] mx-auto`}
+                    alt=""
+                  />
+                ) : null}
               </div>
               <div>
                 <input
@@ -149,7 +151,7 @@ export default function AddProfile({ tooglemodel, settooglemodel }) {
                     setprofileCard({
                       ...profileCard,
                       ShopName: e.target.value,
-                    })
+                    });
                   }}
                 />
               </div>
@@ -164,7 +166,7 @@ export default function AddProfile({ tooglemodel, settooglemodel }) {
                     setprofileCard({
                       ...profileCard,
                       Contact: e.target.value,
-                    })
+                    });
                   }}
                 />
               </div>
@@ -179,11 +181,29 @@ export default function AddProfile({ tooglemodel, settooglemodel }) {
                     setprofileCard({
                       ...profileCard,
                       AboutShop: e.target.value,
-                    })
+                    });
                   }}
                 />
               </div>
-              <button className="bg-yellow-500 text-white px-20 py-1.5 rounded-full" type="submit">
+              <div>
+                <input
+                  type="text"
+                  value={profileCard.Address}
+                  placeholder="State , Area"
+                  required
+                  className="bg-slate-100 px-8 outline-none py-2.5"
+                  onChange={(e) => {
+                    setprofileCard({
+                      ...profileCard,
+                      Address: e.target.value,
+                    });
+                  }}
+                />
+              </div>
+              <button
+                className="bg-yellow-500 text-white px-20 py-1.5 rounded-full"
+                onClick={handleSubmit}
+              >
                 Done
               </button>
             </form>

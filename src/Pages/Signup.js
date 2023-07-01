@@ -2,9 +2,12 @@ import { useId, useState } from "react";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "../Firebase";
 import { useNavigate } from "react-router-dom";
-export default function Signup() {
+import LoginModel from "../models/LoginModel";
+export default function Signup({ location }) {
   const UserJwt = useId();
   const navigate = useNavigate();
+  const LoginJwt = localStorage.getItem("UserJwt");
+  const [togglemodel, settogglemodel] = useState(false);
   const [admin, setadmin] = useState({
     UserJwt: UserJwt,
     Name: "",
@@ -18,7 +21,8 @@ export default function Signup() {
     try {
       await setDoc(doc(db, "TAILORS", UserJwt), admin);
       localStorage.setItem("UserJwt", UserJwt);
-      navigate(`/profile/${UserJwt}`);
+      localStorage.setItem("UserName", admin.Name);
+      navigate(`/`);
     } catch (error) {
       console.log(error);
     }
@@ -27,9 +31,9 @@ export default function Signup() {
   return (
     <>
       <main>
-        <div className="flex justify-center flex-col items-center my-8  mx-auto">
-          <div className="text-center space-y-5 md:space-y-7">
-            <h1 className="text-yellow-500 text-2xl sm:text-3xl md:text-4xl font-semibold">
+        <div className="flex flex-col items-center justify-center mx-auto my-3">
+          <div className="space-y-5 text-center md:space-y-7">
+            <h1 className="text-3xl font-semibold leading-10 text-yellow-500 md:text-4xl">
               Welcome to FindMyTailor.com
             </h1>
             <p className="text-slate-500 sm:text-lg md:text-xl ">
@@ -37,7 +41,7 @@ export default function Signup() {
             </p>
           </div>
 
-          <form className="my-8 flex justify-center flex-col space-y-8 ">
+          <form className="flex flex-col justify-center my-8 space-y-7 ">
             <div className="flex flex-col space-y-3">
               <label htmlFor="name" className="text-slate-500">
                 Name
@@ -45,11 +49,12 @@ export default function Signup() {
               <input
                 id="name"
                 type="text"
+                required
                 value={admin.Name}
                 onChange={(e) => {
                   setadmin({ ...admin, Name: e.target.value });
                 }}
-                className="px-14 py-2 border-[1px] outline-none"
+                className="px-8 sm:px-14 py-2 border-[1px] outline-none"
               />
             </div>
             <div className="flex flex-col space-y-3">
@@ -59,12 +64,12 @@ export default function Signup() {
               <input
                 id="Address"
                 type="text"
+                required
                 value={admin.Address}
-                placeholder="Hyderabad , Kompally"
                 onChange={(e) => {
-                  setadmin({ ...admin, Address: e.target.value });
+                  setadmin({ ...admin, Address: location });
                 }}
-                className="px-14 py-2 border-[1px] outline-none"
+                className="px-8 sm:px-14px-14 py-2 border-[1px] outline-none"
               />
             </div>
             <div className="flex flex-col space-y-3">
@@ -75,10 +80,11 @@ export default function Signup() {
                 id="Contact"
                 type="text"
                 value={admin.Contact}
+                required
                 onChange={(e) => {
                   setadmin({ ...admin, Contact: e.target.value });
                 }}
-                className="px-14 py-2 border-[1px] outline-none"
+                className="px-8 sm:px-14 py-2 border-[1px] outline-none"
               />
             </div>
             <div className="flex flex-col space-y-3">
@@ -89,21 +95,36 @@ export default function Signup() {
                 id="About"
                 type="text"
                 value={admin.About}
+                required
                 onChange={(e) => {
                   setadmin({ ...admin, About: e.target.value });
                 }}
-                className="px-14 py-2 border-[1px] outline-none"
+                className="px-8 sm:px-14 py-2 border-[1px] outline-none"
               />
             </div>
             <button
               onClick={Createaccount}
-              className="bg-yellow-500 text-white px-7 py-2 rounded-full"
+              className="py-2 text-white bg-yellow-500 rounded-full px-7"
             >
-              Create account
+              Sign in
             </button>
           </form>
+          <p>
+            Already have an account?{" "}
+            <span
+              onClick={() => {
+                settogglemodel(!togglemodel);
+              }}
+              className="text-yellow-500 text-center font-semibold cursor-pointer"
+            >
+              Login
+            </span>
+          </p>
         </div>
       </main>
+      {togglemodel ? (
+        <LoginModel togglemodel={togglemodel} settogglemodel={settogglemodel} />
+      ) : null}
     </>
   );
 }
