@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Card, Navbar } from "../components/index";
+import Carousel from "../components/Carousel";
 
 export default function Home() {
   const [location, setLocation] = useState("");
@@ -27,6 +28,7 @@ export default function Home() {
   return (
     <>
       <Navbar />
+      <Carousel/>
       <Card location={location} />
     </>
   );

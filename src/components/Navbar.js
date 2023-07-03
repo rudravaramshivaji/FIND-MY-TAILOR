@@ -26,7 +26,7 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`md:flex md:justify-between items-center md:px-10 px-4 py-1.5 md:py-4 shadow-sm border-b-[1px]  border-slate-100  ${
+        className={`md:flex md:justify-between z-50 items-center md:px-10 px-4 py-1.5 md:py-4 shadow-sm border-b-[1px]  border-slate-100  ${
           sticky
             ? "fixed bg-white ease-in-out duration-300 top-0 w-screen"
             : null
